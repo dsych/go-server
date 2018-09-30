@@ -42,7 +42,7 @@ func main() {
 	subrouter.HandleFunc("/hello", helloServer)
 	subrouter.Use(authMiddleware)
 
-	err := http.ListenAndServeTLS("localhost:1443", "./keys/server.crt", "./keys/server.key", context.ClearHandler(router))
+	err := http.ListenAndServe("localhost:1443", context.ClearHandler(router))
 
 	if err != nil {
 		log.Fatal("Unable to serve: ", err)
