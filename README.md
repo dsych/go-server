@@ -11,3 +11,6 @@
   * `content/hello` - protected by login
   * `content/logout` - protected by login
   * `/hello`
+  
+  ## NOTE
+You need to set `GO_USERNAME`, `GO_PASSWORD` and `GO_HOST` to corresponding mysql credentials, so that Go server can login into your database.
