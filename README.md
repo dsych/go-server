@@ -6,11 +6,7 @@
 6. Run `go-server`
 
 * To log in you need to pass `user` and `password` as query parameters to login route. List of login and passwords could be found in the code.
-* Routes:
-  * `/login`
-  * `content/hello` - protected by login
-  * `content/logout` - protected by login
-  * `/hello`
+
   
   ## NOTE
 * You need to set `GO_USERNAME`, `GO_PASSWORD` and `GO_HOST` to corresponding mysql credentials, so that Go server can login into your database.
