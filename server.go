@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -108,6 +109,9 @@ func isAuthenticated(r *http.Request) (interface{}, bool) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+	//expire previous session
+	deleteSession(w, r)
+
 	session, err := store.Get(r, cookieName)
 
 	if err != nil {
@@ -139,15 +143,25 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
+func deleteSession(w http.ResponseWriter, r *http.Request) error {
 	session, err := store.Get(r, cookieName)
 
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Fatal(err)
+		return errors.New("Internal Server Error")
 	}
 
-	session.Values[authValue] = false
-	session.Save(r, w)
+	session.Options.MaxAge = -1
+	err = session.Save(r, w)
+	return nil
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	if err := deleteSession(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 	log.Println("Logged out")
 }
