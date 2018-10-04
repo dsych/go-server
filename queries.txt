@@ -1,0 +1,43 @@
+create table users ( username varchar(50) primary key, password blob(64) not null, salt blob(32) not null );
+
+// create user and grant them view only privileges on users table
+create user client@'%' identified by '12345';
+grant select on a1.users to client;
+
+
+
+
+staff_data:
+
++--------------------+-------------+------+-----+---------+-------+
+| Field              | Type        | Null | Key | Default | Extra |
++--------------------+-------------+------+-----+---------+-------+
+| id                 | int(11)     | YES  |     | NULL    |       |
+| first_name         | varchar(50) | YES  |     | NULL    |       |
+| last_name          | varchar(50) | YES  |     | NULL    |       |
+| gender             | varchar(50) | YES  |     | NULL    |       |
+| date_of_birth      | date        | YES  |     | NULL    |       |
+| health_card_number | varchar(50) | YES  |     | NULL    |       |
+| SIN                | varchar(50) | YES  |     | NULL    |       |
+| university         | varchar(50) | YES  |     | NULL    |       |
+| home_address       | varchar(50) | YES  |     | NULL    |       |
+| email              | varchar(50) | YES  |     | NULL    |       |
+| employment_id      | varchar(50) | YES  |     | NULL    |       |
+| job_role           | varchar(50) | YES  |     | NULL    |       |
+| pay                | varchar(50) | YES  |     | NULL    |       |
+| manager            | varchar(50) | YES  |     | NULL    |       |
++--------------------+-------------+------+-----+---------+-------+
+
+system_access_data:
+
++-----------------------+-------------+------+-----+---------+-------+
+| Field                 | Type        | Null | Key | Default | Extra |
++-----------------------+-------------+------+-----+---------+-------+
+| employee_id           | int(11)     | YES  |     | NULL    |       |
+| username              | varchar(50) | YES  |     | NULL    |       |
+| password              | varchar(50) | YES  |     | NULL    |       |
+| computer_asset_number | varchar(40) | YES  |     | NULL    |       |
+| static_ip_address     | varchar(20) | YES  |     | NULL    |       |
+| MAC_address           | varchar(50) | YES  |     | NULL    |       |
+| access_level          | int(11)     | YES  |     | NULL    |       |
++-----------------------+-------------+------+-----+---------+-------+
