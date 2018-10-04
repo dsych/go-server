@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-
 	"github.com/gorilla/sessions"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -17,6 +20,7 @@ var (
 	cookieName = "auth"
 	authValue  = "authValue"
 	users      = map[string]string{}
+	db         = DBManager{Username: "client", Password: "12345", Host: "192.168.1.118"}
 )
 
 func helloServer(w http.ResponseWriter, req *http.Request) {
@@ -34,13 +38,18 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Schemes("https")
-	router.HandleFunc("/hello", helloServer)
-	router.HandleFunc("/login", login)
-	subrouter := router.PathPrefix("/content").Subrouter()
+	router.HandleFunc("/api/login", login).Methods("POST")
+	router.HandleFunc("/api/register", register)
+	router.HandleFunc("/api/logout", logout).Methods("GET")
+	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
+	router.PathPrefix("/").Handler(http.FileServer(fs))
+	router.Use(authMiddleware)
 
-	subrouter.HandleFunc("/logout", logout).Methods("GET")
-	subrouter.HandleFunc("/hello", helloServer)
-	subrouter.Use(authMiddleware)
+	if err := db.Connect(); err != nil {
+		log.Fatal("Unable to connect to database")
+	}
+
+	defer db.CloseConnection()
 
 	err := http.ListenAndServe("localhost:1443", context.ClearHandler(router))
 
@@ -62,6 +71,22 @@ func initSessionStore() *sessions.CookieStore {
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		//check if this path needs to authenticated
+		pathsEnforced := []string{"/content", "/login/register"}
+		shouldValidate := false
+		for _, path := range pathsEnforced {
+			if strings.Contains(r.URL.EscapedPath(), path) {
+				shouldValidate = true
+				break
+			}
+		}
+
+		// no need for validation
+		if !shouldValidate {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		if auth, ok := isAuthenticated(r); auth != nil && !auth.(bool) {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		} else if !ok {
@@ -78,6 +103,7 @@ func isAuthenticated(r *http.Request) (interface{}, bool) {
 		log.Fatal("Session is not available")
 		return false, false
 	}
+
 	return session.Values[authValue], true
 }
 
@@ -88,16 +114,22 @@ func login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 
-	user, okU := r.URL.Query()["user"]
-	password, okP := r.URL.Query()["password"]
+	decoder := json.NewDecoder(r.Body)
+	var body UserRequest
+	err = decoder.Decode(&body)
 
-	if (!okU || len(user[0]) < 1) || (!okP || len(password[0]) < 1) {
-		log.Println("Url Param 'user' is missing")
+	if err != nil || len(body.Username) < 1 || len(body.Password) < 1 {
+		res := "Missing username or password"
+		log.Println(res)
+		http.Error(w, res, http.StatusInternalServerError)
 		return
 	}
 
-	if pass, found := users[user[0]]; !found || password[0] != string(pass) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+	u := User{Username: body.Username, Password: []byte(body.Password)}
+
+	if err := db.Authenticate(u); err != nil {
+		log.Println(err)
+		http.Error(w, "Invalid Credentials", http.StatusForbidden)
 		return
 	}
 
@@ -116,5 +148,26 @@ func logout(w http.ResponseWriter, r *http.Request) {
 
 	session.Values[authValue] = false
 	session.Save(r, w)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 	log.Println("Logged out")
+}
+
+func register(w http.ResponseWriter, r *http.Request) {
+
+	user, okU := r.URL.Query()["user"]
+	password, okP := r.URL.Query()["password"]
+
+	if (!okU || len(user[0]) < 1) || (!okP || len(password[0]) < 1) {
+		resp := "Url Param 'user' or 'password' is missing"
+		log.Println(resp)
+		w.Write([]byte(resp))
+		return
+	}
+
+	u := User{Username: user[0], Password: []byte(password[0])}
+
+	if err := db.Register(u); err != nil {
+		log.Println(err)
+		w.Write([]byte("Unable to register"))
+	}
 }
