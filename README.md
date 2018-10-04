@@ -13,4 +13,5 @@
   * `/hello`
   
   ## NOTE
-You need to set `GO_USERNAME`, `GO_PASSWORD` and `GO_HOST` to corresponding mysql credentials, so that Go server can login into your database.
+* You need to set `GO_USERNAME`, `GO_PASSWORD` and `GO_HOST` to corresponding mysql credentials, so that Go server can login into your database.
+* There is a `queries.txt` file that contains queries for table creation.
