@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gorilla/context"
@@ -21,7 +22,7 @@ var (
 	cookieName = "auth"
 	authValue  = "authValue"
 	users      = map[string]string{}
-	db         = DBManager{Username: "client", Password: "12345", Host: "192.168.1.118"}
+	db         = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST")}
 )
 
 func helloServer(w http.ResponseWriter, req *http.Request) {
@@ -52,7 +53,7 @@ func main() {
 
 	defer db.CloseConnection()
 
-	err := http.ListenAndServe("localhost:1443", context.ClearHandler(router))
+	err := http.ListenAndServe("localhost:1444", context.ClearHandler(router))
 
 	if err != nil {
 		log.Fatal("Unable to serve: ", err)
@@ -73,7 +74,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		//check if this path needs to authenticated
-		pathsEnforced := []string{"/content", "/login/register"}
+		pathsEnforced := []string{"/content"}
 		shouldValidate := false
 		for _, path := range pathsEnforced {
 			if strings.Contains(r.URL.EscapedPath(), path) {
@@ -151,7 +152,8 @@ func deleteSession(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("Internal Server Error")
 	}
 
-	session.Options.MaxAge = -1
+	// session.Options.MaxAge = -1
+	session.Values[authValue] = false
 	err = session.Save(r, w)
 	return nil
 }

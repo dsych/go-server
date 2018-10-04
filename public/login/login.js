@@ -9,7 +9,12 @@ window.addEventListener("load", () => {
             body: JSON.stringify({ username, password })
         })
             .then(res => {
-                window.location.assign(`${baseUrl}/index.html`);
+                if (res.ok) {
+                    window.location.assign(`${baseUrl}/index.html`);
+                } else {
+                    document.querySelector("#result").innerHTML =
+                        "Invalid credentials";
+                }
             })
             .catch(err => {
                 document.querySelector("#result").innerHTML =
