@@ -1,5 +1,5 @@
 window.addEventListener("load", () => {
-    document.querySelector("button#login").addEventListener("click", () => {
+    document.querySelector("button#register").addEventListener("click", () => {
         const username = document.querySelector("#username").value;
         const password = document.querySelector("#password").value;
         const baseUrl = `${window.location.protocol}//${window.location.host}`;

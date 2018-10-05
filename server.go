@@ -44,7 +44,7 @@ func main() {
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
-	router.PathPrefix("/").Handler(http.FileServer(fs))
+	router.PathPrefix("/").Handler(authMiddleware(http.FileServer(fs)))
 	router.Use(authMiddleware)
 
 	if err := db.Connect(); err != nil {
@@ -89,7 +89,7 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if auth, ok := isAuthenticated(r); auth != nil && !auth.(bool) {
+		if auth, ok := isAuthenticated(r); auth == nil || auth.IsNew || (auth.Values[authValue] != nil && !auth.Values[authValue].(bool)) {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		} else if !ok {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -99,14 +99,14 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func isAuthenticated(r *http.Request) (interface{}, bool) {
+func isAuthenticated(r *http.Request) (*sessions.Session, bool) {
 	session, err := store.Get(r, cookieName)
 	if err != nil {
 		log.Fatal("Session is not available")
-		return false, false
+		return nil, false
 	}
 
-	return session.Values[authValue], true
+	return session, true
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -170,20 +170,25 @@ func logout(w http.ResponseWriter, r *http.Request) {
 
 func register(w http.ResponseWriter, r *http.Request) {
 
-	user, okU := r.URL.Query()["user"]
-	password, okP := r.URL.Query()["password"]
+	decoder := json.NewDecoder(r.Body)
+	var body UserRequest
+	err := decoder.Decode(&body)
 
-	if (!okU || len(user[0]) < 1) || (!okP || len(password[0]) < 1) {
-		resp := "Url Param 'user' or 'password' is missing"
-		log.Println(resp)
-		w.Write([]byte(resp))
+	if err != nil || len(body.Username) < 1 || len(body.Password) < 1 {
+		res := "Missing username or password"
+		log.Println(res)
+		http.Error(w, res, http.StatusInternalServerError)
 		return
 	}
 
-	u := User{Username: user[0], Password: []byte(password[0])}
+	u := User{Username: body.Username, Password: []byte(body.Password)}
 
 	if err := db.Register(u); err != nil {
 		log.Println(err)
-		w.Write([]byte("Unable to register"))
+		http.Error(w, "Unable to register", http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("Registered"))
 }
