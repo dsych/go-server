@@ -23,7 +23,7 @@ var (
 	cookieName = "auth"
 	authValue  = "authValue"
 	users      = map[string]string{}
-	db         = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST")}
+	db         = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST"), Database: os.Getenv("GO_DATABASE")}
 )
 
 func main() {

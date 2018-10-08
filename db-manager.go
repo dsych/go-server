@@ -21,16 +21,17 @@ type DBManager struct {
 	Username string
 	Password string
 	Host     string
+	Database string
 
 	db          *sql.DB
 	isConnected bool
 }
 
 func (m *DBManager) Connect() error {
-	if len(m.Username) == 0 || len(m.Password) == 0 || len(m.Host) == 0 {
-		panic("Connection credentials are not provided. GO_USERNAME: '" + m.Username + "', GO_PASSWORD: '" + m.Password + "', GO_HOST: '" + m.Host + "'.")
+	if len(m.Username) == 0 || len(m.Password) == 0 || len(m.Host) == 0 || len(m.Database) == 0 {
+		panic("Connection credentials are not provided. GO_USERNAME: '" + m.Username + "', GO_PASSWORD: '" + m.Password + "', GO_HOST: '" + m.Host + "', GO_DATABASE: '" + m.Database + "'.")
 	}
-	db, err := sql.Open("mysql", m.Username+":"+m.Password+"@tcp("+m.Host+")/"+database)
+	db, err := sql.Open("mysql", m.Username+":"+m.Password+"@tcp("+m.Host+")/"+m.Database)
 
 	if err == nil {
 		m.db = db
