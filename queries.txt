@@ -3,6 +3,8 @@ create table users ( username varchar(50) primary key, password blob(64) not nul
 // create user and grant them view only privileges on users table
 create user client@'%' identified by '12345';
 grant select on a1.users to client;
+grant select on a1.system_access_table to client;
+grant select on a1.staff_data to client;
 
 
 

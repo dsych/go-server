@@ -31,3 +31,24 @@ replace_string="REPLACE_ME"
 awk "{gsub(\"$replace_string\", \"$certs\")}1" ./go-server.conf > ./keys/go-server.conf
 
 sudo cp ./keys/go-server.conf /etc/httpd/conf.d
+
+echo "Setting up database..."
+read -p "Enter mysql login user: " loginUser
+read -p "Enter login password: " loginPassword
+read -p "Enter username to be created: " createUser
+read -p "Enter password for the new user: " createPassword
+read -p "Enter database to be created: " database
+read -p "Enter host: " host
+
+mysql -u $loginUser --password=$loginPassword -h $host -e "create database ${database};"
+
+cat ./res/*.sql | mysql -u $loginUser --password=$loginPassword -h $host $database
+
+mysql -u $loginUser --password=$loginPassword -h $host -e "
+create table ${database}.users ( username varchar(50) primary key, password blob(64) not null, salt blob(32) not null );
+create user ${createUser}@'%' identified by '${createPassword}';
+grant select on ${database}.users to client;
+grant select on ${database}.system_access_table to client;
+grant select on ${database}.staff_data to client;
+"
+
