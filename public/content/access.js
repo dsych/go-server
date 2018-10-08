@@ -18,15 +18,14 @@ window.addEventListener("load", () => {
                 if (res.ok) {
                     return res.json();
                 } else {
-                    throw "";
+                    throw res.statusText;
                 }
             })
             .then(json => {
                 tableCreate(json);
             })
             .catch(err => {
-                document.querySelector("#result").innerHTML =
-                    "Invalid credentials";
+                document.querySelector("#result").innerHTML = err;
                 console.log(err);
             });
     });

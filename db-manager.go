@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-	"reflect"
 
 	databaseModel "github.com/dsych/go-server/models/database"
 )
@@ -41,13 +40,6 @@ func (m *DBManager) Connect() error {
 }
 
 func (m *DBManager) searchAccess(access databaseModel.AccessData) ([]databaseModel.AccessData, error) {
-
-	t := reflect.TypeOf(access)
-	var buffer bytes.Buffer
-	buffer.WriteString(t.Field(0).Tag.Get("json"))
-	for i := 1; i < t.NumField(); i++ {
-		buffer.WriteString(", " + t.Field(i).Tag.Get("json"))
-	}
 	query := "select " +
 		"employee_id, " +
 		"username, " +
@@ -73,6 +65,63 @@ func (m *DBManager) searchAccess(access databaseModel.AccessData) ([]databaseMod
 	for rows.Next() {
 		var row databaseModel.AccessData
 		if err := rows.Scan(&row.EmployeeID, &row.Username, &row.Password, &row.ComputerNumber, &row.StaticIP, &row.MACAddress, &row.AccessLevel); err != nil {
+			log.Println(err)
+		}
+		rc = append(rc, row)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println(err)
+		return nil, errors.New("Failed reading records")
+	}
+
+	return rc, nil
+}
+
+func (m *DBManager) searchStaff(access databaseModel.Staff) ([]databaseModel.Staff, error) {
+
+	query := "select " +
+		"first_name, " +
+		"last_name, " +
+		"gender, " +
+		"date_of_birth, " +
+		"health_card_number, " +
+		"SIN, " +
+		"university, " +
+		"home_address, " +
+		"email, " +
+		"employment_id, " +
+		"job_role, " +
+		"pay, " +
+		"manager " +
+		" from " + staffTable + " where first_name = ? or last_name = ? or employment_id = ? or manager like ?"
+	rows, err := m.db.Query(
+		query,
+		access.FirstName, access.LastName, access.EmploymentID, access.Manager)
+
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to retrieve records")
+	}
+	defer rows.Close()
+
+	rc := make([]databaseModel.Staff, 0)
+
+	for rows.Next() {
+		var row databaseModel.Staff
+		if err := rows.Scan(&row.FirstName,
+			&row.LastName,
+			&row.Gender,
+			&row.Birthday,
+			&row.HealthCard,
+			&row.SIN,
+			&row.University,
+			&row.HomeAddress,
+			&row.Email,
+			&row.EmploymentID,
+			&row.JobRole,
+			&row.Pay,
+			&row.Manager); err != nil {
 			log.Println(err)
 		}
 		rc = append(rc, row)

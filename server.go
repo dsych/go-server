@@ -44,6 +44,7 @@ func main() {
 	router.Schemes("https")
 	router.HandleFunc("/api/login", login).Methods("POST")
 	router.HandleFunc("/api/searchAccess", searchAccess).Methods("POST")
+	router.HandleFunc("/api/searchStaff", searchStaff).Methods("POST")
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
@@ -143,7 +144,7 @@ func deleteSession(w http.ResponseWriter, r *http.Request) error {
 	session, err := store.Get(r, cookieName)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return errors.New("Internal Server Error")
 	}
 
@@ -172,7 +173,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	if err != nil || len(body.Username) < 1 || len(body.Password) < 1 {
 		res := "Missing username or password"
 		log.Println(res)
-		http.Error(w, res, http.StatusInternalServerError)
+		http.Error(w, res, http.StatusBadRequest)
 		return
 	}
 
@@ -194,7 +195,7 @@ func searchAccess(w http.ResponseWriter, r *http.Request) {
 	if err != nil || (body.AccessLevel == 0 && len(body.Username) < 1 && body.EmployeeID == 0) {
 		res := "Empty request received"
 		log.Println(res)
-		http.Error(w, res, http.StatusInternalServerError)
+		http.Error(w, res, http.StatusBadRequest)
 		return
 	}
 
@@ -209,6 +210,35 @@ func searchAccess(w http.ResponseWriter, r *http.Request) {
 
 	for _, a := range ac {
 		rc = append(rc, requests.Access.PopulateFromDB(requests.Access{}, a))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rc)
+}
+
+func searchStaff(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var body requests.Employee
+	err := decoder.Decode(&body)
+
+	if err != nil || (len(body.FirstName) < 1 && len(body.LastName) < 1 && len(body.EmploymentID) < 1 && len(body.Manager) < 1) {
+		res := "Empty request received"
+		log.Println(res)
+		http.Error(w, res, http.StatusBadRequest)
+		return
+	}
+
+	ac, err := db.searchStaff(body.ToDBModel())
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rc := make([]requests.Employee, 0)
+
+	for _, a := range ac {
+		rc = append(rc, requests.Employee.PopulateFromDB(requests.Employee{}, a))
 	}
 
 	w.Header().Set("Content-Type", "application/json")

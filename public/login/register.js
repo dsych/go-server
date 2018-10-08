@@ -8,12 +8,14 @@ window.addEventListener("load", () => {
             credentials: "include",
             body: JSON.stringify({ username, password })
         })
-            .then(() => {
+            .then(res => {
+                if (!res.ok) {
+                    throw res.statusText;
+                }
                 document.querySelector("#result").innerHTML = "Registered";
             })
             .catch(err => {
-                document.querySelector("#result").innerHTML =
-                    "Invalid credentials";
+                document.querySelector("#result").innerHTML = err;
                 console.log(err);
             });
     });
