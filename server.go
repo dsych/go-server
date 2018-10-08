@@ -43,6 +43,7 @@ func main() {
 	router := mux.NewRouter()
 	router.Schemes("https")
 	router.HandleFunc("/api/login", login).Methods("POST")
+	router.HandleFunc("/api/searchAccess", searchAccess).Methods("POST")
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
@@ -183,4 +184,33 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("Registered"))
+}
+
+func searchAccess(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var body requests.Access
+	err := decoder.Decode(&body)
+
+	if err != nil || (body.AccessLevel == 0 && len(body.Username) < 1 && body.EmployeeID == 0) {
+		res := "Empty request received"
+		log.Println(res)
+		http.Error(w, res, http.StatusInternalServerError)
+		return
+	}
+
+	ac, err := db.searchAccess(body.ToDBModel())
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rc := make([]requests.Access, 0)
+
+	for _, a := range ac {
+		rc = append(rc, requests.Access.PopulateFromDB(requests.Access{}, a))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rc)
 }
