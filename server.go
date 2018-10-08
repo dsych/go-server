@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 
+	"github.com/dsych/go-server/models/requests"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -31,10 +32,11 @@ func helloServer(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	if err := db.Connect(); err != nil {
+		log.Fatal("Unable to connect to database")
+	}
 
-	users["user1"] = "1234"
-	users["abc"] = "1234"
-	users["123"] = "1234"
+	defer db.CloseConnection()
 
 	store = initSessionStore()
 
@@ -44,14 +46,8 @@ func main() {
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
-	router.PathPrefix("/").Handler(authMiddleware(http.FileServer(fs)))
+	router.PathPrefix("/").Handler(http.FileServer(fs))
 	router.Use(authMiddleware)
-
-	if err := db.Connect(); err != nil {
-		log.Fatal("Unable to connect to database")
-	}
-
-	defer db.CloseConnection()
 
 	err := http.ListenAndServe("localhost:1444", context.ClearHandler(router))
 
@@ -120,7 +116,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var body UserRequest
+	var body requests.UserRequest
 	err = decoder.Decode(&body)
 
 	if err != nil || len(body.Username) < 1 || len(body.Password) < 1 {
@@ -130,9 +126,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := User{Username: body.Username, Password: []byte(body.Password)}
-
-	if err := db.Authenticate(u); err != nil {
+	if err := db.Authenticate(body.ToDBModel()); err != nil {
 		log.Println(err)
 		http.Error(w, "Invalid Credentials", http.StatusForbidden)
 		return
@@ -171,7 +165,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 func register(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
-	var body UserRequest
+	var body requests.UserRequest
 	err := decoder.Decode(&body)
 
 	if err != nil || len(body.Username) < 1 || len(body.Password) < 1 {
@@ -181,9 +175,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := User{Username: body.Username, Password: []byte(body.Password)}
-
-	if err := db.Register(u); err != nil {
+	if err := db.Register(body.ToDBModel()); err != nil {
 		log.Println(err)
 		http.Error(w, "Unable to register", http.StatusInternalServerError)
 		return

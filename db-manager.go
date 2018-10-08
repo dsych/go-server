@@ -7,7 +7,8 @@ import (
 	"crypto/sha512"
 	"database/sql"
 	"errors"
-	"log"
+
+	databaseModel "github.com/dsych/go-server/models/database"
 )
 
 const database = "a1"
@@ -25,6 +26,9 @@ type DBManager struct {
 }
 
 func (m *DBManager) Connect() error {
+	if len(m.Username) == 0 || len(m.Password) == 0 || len(m.Host) == 0 {
+		panic("Connection credentials are not provided. GO_USERNAME: '" + m.Username + "', GO_PASSWORD: '" + m.Password + "', GO_HOST: '" + m.Host + "'.")
+	}
 	db, err := sql.Open("mysql", m.Username+":"+m.Password+"@tcp("+m.Host+")/"+database)
 
 	if err == nil {
@@ -34,7 +38,7 @@ func (m *DBManager) Connect() error {
 	return err
 }
 
-func (m *DBManager) Authenticate(user User) error {
+func (m *DBManager) Authenticate(user databaseModel.User) error {
 	invalidError := errors.New("Invalid credentials provided")
 
 	dbUser := user
@@ -57,7 +61,7 @@ func (m *DBManager) Authenticate(user User) error {
 	}
 }
 
-func (m *DBManager) Register(user User) error {
+func (m *DBManager) Register(user databaseModel.User) error {
 
 	// make sure that salt is empty
 	user.Salt = nil
@@ -67,12 +71,7 @@ func (m *DBManager) Register(user User) error {
 		return err
 	}
 
-	log.Println(user)
-	p := user.Password
-	s := user.Salt
-	u := user.Username
-
-	res, err := m.db.Exec("insert into "+userTable+" values(?,?,?)", u, p, s)
+	res, err := m.db.Exec("insert into "+userTable+" values(?,?,?)", user.Username, user.Password, user.Salt)
 
 	if err != nil {
 		return err
@@ -88,7 +87,7 @@ func (m *DBManager) Register(user User) error {
 }
 
 // returns error or nil
-func (m *DBManager) generateSaltedPassword(user *User) error {
+func (m *DBManager) generateSaltedPassword(user *databaseModel.User) error {
 	// generate salt
 	tmp := make([]byte, 10)
 	if _, err := rand.Read(tmp); err != nil {
