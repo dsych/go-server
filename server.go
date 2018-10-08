@@ -26,11 +26,6 @@ var (
 	db         = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST")}
 )
 
-func helloServer(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("Example response from https server!"))
-}
-
 func main() {
 	if err := db.Connect(); err != nil {
 		log.Fatal("Unable to connect to database")
