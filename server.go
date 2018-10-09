@@ -102,7 +102,7 @@ func authMiddleware(next http.Handler) http.Handler {
 func isAuthenticated(r *http.Request) (*sessions.Session, bool) {
 	session, err := store.Get(r, cookieName)
 	if err != nil {
-		log.Fatal("Session is not available")
+		log.Println(err, "Client's cookie is out of date")
 		return nil, false
 	}
 
@@ -145,7 +145,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 func deleteSession(w http.ResponseWriter, r *http.Request) error {
 	session, err := store.Get(r, cookieName)
 
-	if err != nil {
+	// encryption keys were updated, so we want to re-create the session
+	if err != nil && !session.IsNew {
 		log.Println(err)
 		return errors.New("Internal Server Error")
 	}
