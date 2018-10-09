@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/gorilla/context"
@@ -18,7 +20,7 @@ import (
 )
 
 var (
-	keyPass    = "./keys/server.key"
+	keyPass    = "./keys/session.key"
 	store      *sessions.CookieStore
 	cookieName = "auth"
 	authValue  = "authValue"
@@ -54,7 +56,12 @@ func main() {
 }
 
 func initSessionStore() *sessions.CookieStore {
-	key, err := ioutil.ReadFile(keyPass)
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	key, err := ioutil.ReadFile(path.Join(dir, keyPass))
 
 	if err != nil {
 		panic(err)
