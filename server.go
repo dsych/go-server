@@ -40,8 +40,8 @@ func main() {
 	router := mux.NewRouter()
 	router.Schemes("https")
 	router.HandleFunc("/api/login", login).Methods("POST")
-	router.HandleFunc("/api/searchAccess", searchAccess).Methods("POST")
-	router.HandleFunc("/api/searchStaff", searchStaff).Methods("POST")
+	router.HandleFunc("/api/content/searchAccess", searchAccess).Methods("POST")
+	router.HandleFunc("/api/content/searchStaff", searchStaff).Methods("POST")
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}

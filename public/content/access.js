@@ -5,7 +5,7 @@ window.addEventListener("load", () => {
         const employeeId = document.querySelector("#employeeId").value;
 
         const baseUrl = `${window.location.protocol}//${window.location.host}`;
-        fetch(`${baseUrl}/api/searchAccess`, {
+        fetch(`${baseUrl}/api/content/searchAccess`, {
             method: "POST",
             credentials: "include",
             body: JSON.stringify({

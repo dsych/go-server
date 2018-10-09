@@ -6,7 +6,7 @@ window.addEventListener("load", () => {
         const manager = document.querySelector("#manager").value;
 
         const baseUrl = `${window.location.protocol}//${window.location.host}`;
-        fetch(`${baseUrl}/api/searchStaff`, {
+        fetch(`${baseUrl}/api/content/searchStaff`, {
             method: "POST",
             credentials: "include",
             body: JSON.stringify({
