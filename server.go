@@ -20,12 +20,13 @@ import (
 )
 
 var (
-	keyPass    = "./keys/session.key"
-	store      *sessions.CookieStore
-	cookieName = "auth"
-	authValue  = "authValue"
-	users      = map[string]string{}
-	db         = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST"), Database: os.Getenv("GO_DATABASE")}
+	keyPass          = "./keys/session.key"
+	store            *sessions.CookieStore
+	cookieName       = "auth"
+	authValue        = "authValue"
+	users            = map[string]string{}
+	expirationPeriod = 5
+	db               = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST"), Database: os.Getenv("GO_DATABASE")}
 )
 
 func main() {
@@ -45,7 +46,7 @@ func main() {
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
-	router.PathPrefix("/").Handler(http.FileServer(fs))
+	router.PathPrefix("/").Handler(noCacheMiddleware(http.FileServer(fs)))
 	router.Use(authMiddleware)
 
 	err := http.ListenAndServe("localhost:1444", context.ClearHandler(router))
@@ -68,6 +69,15 @@ func initSessionStore() *sessions.CookieStore {
 	}
 
 	return sessions.NewCookieStore(key)
+}
+
+func noCacheMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
+		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
+		w.Header().Set("Expires", "0")
+		next.ServeHTTP(w, r) // Proxies.
+	})
 }
 
 func authMiddleware(next http.Handler) http.Handler {
@@ -94,6 +104,9 @@ func authMiddleware(next http.Handler) http.Handler {
 		} else if !ok {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		} else {
+			setSession(auth, expirationPeriod)
+			auth.Save(r, w)
+
 			next.ServeHTTP(w, r)
 		}
 	})
@@ -136,6 +149,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	setSession(session, expirationPeriod)
+
 	session.Values[authValue] = true
 	session.Save(r, w)
 	log.Println("Logged in")
@@ -151,10 +166,16 @@ func deleteSession(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("Internal Server Error")
 	}
 
-	// session.Options.MaxAge = -1
+	setSession(session, -1)
+
 	session.Values[authValue] = false
 	err = session.Save(r, w)
 	return nil
+}
+
+func setSession(s *sessions.Session, minutes int) {
+	s.Options.HttpOnly = true
+	s.Options.MaxAge = minutes * 60
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
