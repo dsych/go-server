@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sudo yum update -y nss curl libcurl
 sudo yum install -y git mod_ssl policycoreutils-python
+sudo yum update -y nss curl libcurl
 
 #download go
 which go 2> /dev/null
