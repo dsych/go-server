@@ -46,3 +46,5 @@ grant select on ${database}.system_access_data to ${createUser};
 grant select on ${database}.staff_data to ${createUser};
 "
 
+echo "DONT FORGET TO RUN 'service httpd restart' to enable new server."
+
