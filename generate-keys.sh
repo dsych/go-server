@@ -20,12 +20,10 @@ openssl req -new -x509 -sha256 -subj "/C=CA/ST=ON/L=Toronto/O=High End Security 
 
 echo "Transfering Apache config file"
 
-#Replace "REPLACE_ME" string with the path to certs
-replace_string="REPLACE_ME"
-
-awk "{gsub(\"$replace_string\", \"$local\")}1" $localDirectory/go-server.conf > $local/go-server.conf
-
-sudo cp $local/go-server.conf /etc/httpd/conf.d
+sudo cp $localDirectory/go-server.conf /etc/httpd/conf.d
+sudo cp $local/server.crt /etc/pki/tls/private
+sudo cp $local/server.key /etc/pki/tls/private
+sudo cp $local/server.crt /etc/pki/tls/certs
 
 echo "Setting up database..."
 read -p "Enter mysql login user: " loginUser
