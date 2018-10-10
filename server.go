@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/gorilla/context"
@@ -35,8 +35,8 @@ func main() {
 	}
 
 	defer db.CloseConnection()
-
-	store = initSessionStore()
+	filename := getCurrentDir()
+	store = initSessionStore(filename)
 
 	router := mux.NewRouter()
 	router.Schemes("https")
@@ -45,7 +45,7 @@ func main() {
 	router.HandleFunc("/api/content/searchStaff", searchStaff).Methods("POST")
 	router.HandleFunc("/api/register", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
-	fs := FileSystem{fs: http.Dir("./public"), readDirBatchSize: 2}
+	fs := FileSystem{fs: http.Dir(path.Join(path.Dir(filename), "./public")), readDirBatchSize: 2}
 	router.PathPrefix("/").Handler(noCacheMiddleware(http.FileServer(fs)))
 	router.Use(authMiddleware)
 
@@ -56,13 +56,16 @@ func main() {
 	}
 }
 
-func initSessionStore() *sessions.CookieStore {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
+func getCurrentDir() string {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		log.Fatal("Unable to locate current source directory")
 	}
+	return filename
+}
 
-	key, err := ioutil.ReadFile(path.Join(dir, keyPass))
+func initSessionStore(filename string) *sessions.CookieStore {
+	key, err := ioutil.ReadFile(path.Join(path.Dir(filename), keyPass))
 
 	if err != nil {
 		panic(err)

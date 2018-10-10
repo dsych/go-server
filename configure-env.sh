@@ -12,6 +12,7 @@ if [ $? -ne 0 ]; then
 fi
 
 port=1443
+localPort=1444
 
 echo "Adding exception for port ${port} to iptables"
 iptables --list -n | grep $port > /dev/null
@@ -25,4 +26,5 @@ fi
 
 #enable port 1443 through SeLinux
 echo "Adding exception for port ${port} to SeLinux"
-sudo semanage port -m -t http_port_t -p tcp $port
+sudo semanage port -a -t http_port_t -p tcp $port
+sudo semanage port -a -t http_port_t -p tcp $localPort
