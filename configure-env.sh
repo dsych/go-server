@@ -11,6 +11,10 @@ if [ $? -ne 0 ]; then
     echo 'Add go binary into your path PATH:$PATH:/usr/local/go/bin'
 fi
 
+# load mysqld on startup
+sudo service mysqld start
+sudo chkconfig -- level 345 mysqld on
+
 port=1443
 localPort=1444
 
