@@ -5,7 +5,7 @@ sudo yum install -y git mod_ssl policycoreutils-python
 
 #download go
 which go 2> /dev/null
-if [ $? -ne 0 ] then 
+if [ $? -ne 0 ]; then 
     wget https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz
     tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz
     echo 'Add go binary into your path PATH:$PATH:/usr/local/go/bin'
@@ -15,7 +15,7 @@ port=1443
 
 echo "Adding exception for port ${port} to iptables"
 iptables --list -n | grep $port > /dev/null
-if [ $? -ne 0 ] then
+if [ $? -ne 0 ]; then
     iptables -I INPUT 2 -p tcp -m state --state NEW -m tcp --dport $port -j ACCEPT
     sudo service iptables save
     sudo service iptables restart
