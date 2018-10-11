@@ -13,7 +13,7 @@ fi
 
 # load mysqld on startup
 sudo service mysqld start
-sudo chkconfig -- level 345 mysqld on
+sudo chkconfig --level 345 mysqld on
 
 port=1443
 localPort=1444
