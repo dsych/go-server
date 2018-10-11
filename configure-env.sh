@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sudo yum update -y nss curl libcurl
 sudo yum install -y git mod_ssl policycoreutils-python
+sudo yum update -y nss curl libcurl
 
 #download go
 which go 2> /dev/null
@@ -10,6 +10,10 @@ if [ $? -ne 0 ]; then
     tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz
     echo 'Add go binary into your path PATH:$PATH:/usr/local/go/bin'
 fi
+
+# load mysqld on startup
+sudo service mysqld start
+sudo chkconfig -- level 345 mysqld on
 
 port=1443
 localPort=1444
