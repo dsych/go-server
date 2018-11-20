@@ -10,7 +10,7 @@ window.addEventListener("load", () => {
         })
             .then(res => {
                 if (res.ok) {
-                    window.location.assign(`${baseUrl}/index.html`);
+                    window.location.assign(`${baseUrl}/content/`);
                 } else {
                     document.querySelector("#result").innerHTML =
                         "Invalid credentials";
