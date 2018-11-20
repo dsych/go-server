@@ -12,7 +12,7 @@ window.addEventListener("load", () => {
                 if (!res.ok) {
                     throw res.statusText;
                 }
-                document.querySelector("#result").innerHTML = "Registered";
+                window.location.assign(`${baseUrl}`);
             })
             .catch(err => {
                 document.querySelector("#result").innerHTML = err;

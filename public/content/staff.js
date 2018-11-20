@@ -36,30 +36,31 @@ window.addEventListener("load", () => {
 const tableCreate = json => {
     const createCell = (value, td) => {
         td.appendChild(document.createTextNode(value));
-        td.style.border = "1px solid black";
     };
 
     const tbl = document.createElement("table");
     tbl.id = "result";
-    tbl.style.width = "100px";
-    tbl.style.border = "1px solid black";
-    const header = tbl.createTHead().insertRow();
-    createCell("First Name", header.insertCell());
-    createCell("Last Name", header.insertCell());
-    createCell("Manager", header.insertCell());
-    createCell("Gender", header.insertCell());
-    createCell("Date of Birth", header.insertCell());
-    createCell("Health Card Number", header.insertCell());
-    createCell("SIN", header.insertCell());
-    createCell("University", header.insertCell());
-    createCell("Home Address", header.insertCell());
-    createCell("Email", header.insertCell());
-    createCell("Employment ID", header.insertCell());
-    createCell("Job Role", header.insertCell());
-    createCell("Pay", header.insertCell());
+    tbl.className = "table table-sm";
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    let th;
+
+    const columns = ["First Name", "Last Name", "Manager", "Gender", "Date of Birth",
+        "Health Card Number", "SIN", "University", "Home Address", "Email", "Employment ID", 
+        "Job Role", "Pay"];
+
+    for (let column of columns) {
+        th = document.createElement('th');
+        th.appendChild(document.createTextNode(column));
+        tr.appendChild(th);
+    }
+
+    thead.appendChild(tr);
+    tbl.appendChild(thead);
+    const body = document.createElement('tbody');
 
     for (let i = 0; i < json.length; i++) {
-        const tr = tbl.insertRow();
+        const tr = body.insertRow();
         createCell(json[i]["firstName"], tr.insertCell());
         createCell(json[i]["lastName"], tr.insertCell());
         createCell(json[i]["manager"], tr.insertCell());
@@ -74,6 +75,8 @@ const tableCreate = json => {
         createCell(json[i]["jobRole"], tr.insertCell());
         createCell(json[i]["pay"], tr.insertCell());
     }
+
+    tbl.appendChild(body);
 
     // build a reference to the existing node to be replaced
     const sp2 = document.getElementById("result");

@@ -3,21 +3,48 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Search Staff</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <title>Search Human Resource data</title>
     <script src="./staff.js"></script>
 </head>
 
 <body>
-    <form>
-        <label for="firstName">First Name</label><input type="text" id="firstName">
-        <label for="lastName">Last Name</label><input type="text" id="lastName">
-        <label for="employmentId">Employment ID</label><input type="text" id="employmentId">
-        <label for="manager">Manager</label><input type="text" id="manager">
-        <button type="button" id="search">Search</button>
-        <a href="/content">Back</a>
-        <br>
-        <div id="result"></div>
-    </form>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h2 class="text-center">Search Human Resource data</h1>
+            </div>
+        </div>
+        <form>
+            <div class="row">
+                <div class="col">
+                    <input type="text" id="firstName" class="form-control" placeholder="First name" autocomplete="off">
+                </div>
+                <div class="col">
+                    <input type="text" id="lastName" class="form-control" placeholder="Last name" autocomplete="off">
+                </div>
+                <div class="col">
+                    <input type="text" id="employmentId" class="form-control" placeholder="Employment ID" autocomplete="off">
+                </div>
+                <div class="col">
+                    <input type="text" id="manager" class="form-control" placeholder="Manager" autocomplete="off">
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col"></div>
+                <div class="col"><button type="button" class="btn btn-dark btn-block" id="search">Search</button></div>
+                <div class="col"><a href="/content" role="button" class="btn btn-secondary btn-block">Back</a></div>
+                <div class="col"></div>
+            </div>
+            <br>
+            <div class="row">
+                <div id="result"></div>
+            </div>
+        </form>
+    </div>
 </body>
 
 </html>

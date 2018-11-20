@@ -87,7 +87,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		//check if this path needs to authenticated
-		pathsEnforced := []string{"/content"}
+		pathsEnforced := []string{"/content", "/logout"}
 		shouldValidate := false
 		for _, path := range pathsEnforced {
 			if strings.Contains(r.URL.EscapedPath(), path) {

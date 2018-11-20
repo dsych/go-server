@@ -34,24 +34,29 @@ window.addEventListener("load", () => {
 const tableCreate = json => {
     const createCell = (value, td) => {
         td.appendChild(document.createTextNode(value));
-        td.style.border = "1px solid black";
     };
 
     const tbl = document.createElement("table");
     tbl.id = "result";
-    tbl.style.width = "100px";
-    tbl.style.border = "1px solid black";
-    const header = tbl.createTHead().insertRow();
-    createCell("employeeId", header.insertCell());
-    createCell("username", header.insertCell());
-    createCell("password", header.insertCell());
-    createCell("accessLvl", header.insertCell());
-    createCell("computerAccess", header.insertCell());
-    createCell("IP", header.insertCell());
-    createCell("MAC", header.insertCell());
+    tbl.className = "table";
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    let th;
+
+    const columns = ["Employee ID", "Username", "Password", "Access Level", "Computer Access", "IP", "MAC"];
+
+    for (let column of columns) {
+        th = document.createElement('th');
+        th.appendChild(document.createTextNode(column));
+        tr.appendChild(th);
+    }
+
+    thead.appendChild(tr);
+    tbl.appendChild(thead);
+    const body = document.createElement('tbody');
 
     for (let i = 0; i < json.length; i++) {
-        const tr = tbl.insertRow();
+        const tr = body.insertRow();
         createCell(json[i]["employeeId"], tr.insertCell());
         createCell(json[i]["username"], tr.insertCell());
         createCell(json[i]["password"], tr.insertCell());
@@ -60,6 +65,8 @@ const tableCreate = json => {
         createCell(json[i]["IP"], tr.insertCell());
         createCell(json[i]["MAC"], tr.insertCell());
     }
+
+    tbl.appendChild(body);
 
     // build a reference to the existing node to be replaced
     const sp2 = document.getElementById("result");
