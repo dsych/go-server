@@ -172,7 +172,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 func getMode(url string) (int, string) {
 	var mode = -1
 	var auth = ""
-
+	url = strings.ToLower(url)
 	if strings.Contains(url, "access") {
 		mode = AuthenticateAccess
 		auth = accessAuthValue
