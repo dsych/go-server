@@ -38,10 +38,13 @@ mysql -u $loginUser --password=$loginPassword -h $host -e "create database ${dat
 cat ./res/*.sql | mysql -u $loginUser --password=$loginPassword -h $host $database
 
 mysql -u $loginUser --password=$loginPassword -h $host -e "
-create table ${database}.users ( username varchar(50) primary key, password blob(64) not null, salt blob(32) not null );
+create table ${database}.accessUsers ( username varchar(50) primary key, password blob(64) not null, salt blob(32) not null );
+create table ${database}.staffUsers ( username varchar(50) primary key, password blob(64) not null, salt blob(32) not null );
 create user ${createUser}@'%' identified by '${createPassword}';
-grant select on ${database}.users to ${createUser};
-grant insert on ${database}.users to ${createUser};
+grant select on ${database}.accessUsers to ${createUser};
+grant insert on ${database}.accessUsers to ${createUser};
+grant select on ${database}.staffUsers to ${createUser};
+grant insert on ${database}.staffUsers to ${createUser};
 grant select on ${database}.system_access_data to ${createUser};
 grant select on ${database}.staff_data to ${createUser};
 flush privileges;
