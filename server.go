@@ -23,7 +23,8 @@ var (
 	keyPass          = "./keys/session.key"
 	store            *sessions.CookieStore
 	cookieName       = "auth"
-	authValue        = "authValue"
+	staffAuthValue   = "staffAuth"
+	accessAuthValue  = "accessAuth"
 	users            = map[string]string{}
 	expirationPeriod = 5
 	db               = DBManager{Username: os.Getenv("GO_USERNAME"), Password: os.Getenv("GO_PASSWORD"), Host: os.Getenv("GO_HOST"), Database: os.Getenv("GO_DATABASE")}
@@ -46,7 +47,8 @@ func main() {
 	router.HandleFunc("/api/content/searchStaff", searchStaff).Methods("POST")
 	router.HandleFunc("/api/register-access", register)
 	router.HandleFunc("/api/register-staff", register)
-	router.HandleFunc("/api/logout", logout).Methods("GET")
+	router.HandleFunc("/api/logout-staff", logout).Methods("GET")
+	router.HandleFunc("/api/logout-access", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir(path.Join(path.Dir(filename), "./public")), readDirBatchSize: 2}
 	router.PathPrefix("/").Handler(noCacheMiddleware(http.FileServer(fs)))
 	router.Use(authMiddleware)
@@ -104,7 +106,10 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if auth, ok := isAuthenticated(r); auth == nil || auth.IsNew || (auth.Values[authValue] != nil && !auth.Values[authValue].(bool)) {
+		auth, ok := isAuthenticated(r)
+		_, authValue := getMode(r.URL.EscapedPath())
+
+		if auth == nil || auth.IsNew || auth.Values[authValue] == nil || (auth.Values[authValue] != nil && !auth.Values[authValue].(bool)) {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		} else if !ok {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -148,7 +153,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mode := getMode(r.URL.EscapedPath())
+	mode, authV := getMode(r.URL.EscapedPath())
 
 	if err := db.Authenticate(body.ToDBModel(), mode); err != nil {
 		log.Println(err)
@@ -158,21 +163,24 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	setSession(session, expirationPeriod)
 
-	session.Values[authValue] = true
+	session.Values[authV] = true
 	session.Save(r, w)
 	log.Println("Logged in")
 
 }
 
-func getMode(url string) int {
+func getMode(url string) (int, string) {
 	var mode = -1
+	var auth = ""
 
 	if strings.Contains(url, "access") {
 		mode = AuthenticateAccess
+		auth = accessAuthValue
 	} else if strings.Contains(url, "staff") {
 		mode = AuthenticateStaff
+		auth = staffAuthValue
 	}
-	return mode
+	return mode, auth
 }
 
 func deleteSession(w http.ResponseWriter, r *http.Request) error {
@@ -184,9 +192,10 @@ func deleteSession(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("Internal Server Error")
 	}
 
-	setSession(session, -1)
+	// setSession(session, -1)
+	_, auth := getMode(r.URL.EscapedPath())
 
-	session.Values[authValue] = false
+	session.Values[auth] = false
 	err = session.Save(r, w)
 	return nil
 }
@@ -218,7 +227,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, res, http.StatusBadRequest)
 		return
 	}
-	mode := getMode(r.URL.EscapedPath())
+	mode, _ := getMode(r.URL.EscapedPath())
 
 	if err := db.Register(body.ToDBModel(), mode); err != nil {
 		log.Println(err)
