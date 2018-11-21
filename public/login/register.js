@@ -3,7 +3,9 @@ window.addEventListener("load", () => {
         const username = document.querySelector("#username").value;
         const password = document.querySelector("#password").value;
         const baseUrl = `${window.location.protocol}//${window.location.host}`;
-        fetch(`${baseUrl}/api/register`, {
+        const mode = document.querySelector("#mode").value;
+
+        fetch(`${baseUrl}/api/register-${mode}`, {
             method: "POST",
             credentials: "include",
             body: JSON.stringify({ username, password })

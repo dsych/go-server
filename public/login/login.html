@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
     <title>Login</title>
     <script src="./login.js"></script>
 </head>
@@ -32,7 +33,15 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Password:</label>
-                        <input type="password" class="form-control" id="password" placeholder="Enter password" autocomplete="off">
+                        <input type="password" class="form-control" id="password" placeholder="Enter password"
+                            autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="mode">Where you want to login:</label>
+                        <select id="mode" name="mode">
+                            <option value="access">Access</option>
+                            <option value="staff">Staff</option>
+                        </select>
                     </div>
                     <button type="button" class="btn btn-dark btn-block" id="login" onclick="">Login</button>
                     <a href="../" role="button" class="btn btn-secondary btn-block">Back</a>

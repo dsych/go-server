@@ -13,9 +13,17 @@ import (
 )
 
 const database = "a1"
-const userTable = "users"
 const staffTable = "staff_data"
 const accessTable = "system_access_data"
+
+const (
+	accessUserTable = "accessUsers"
+	staffUserTable  = "staffUsers"
+)
+const (
+	AuthenticateAccess = 1
+	AuthenticateStaff  = 2
+)
 
 type DBManager struct {
 	Username string
@@ -136,12 +144,31 @@ func (m *DBManager) searchStaff(access databaseModel.Staff) ([]databaseModel.Sta
 	return rc, nil
 }
 
-func (m *DBManager) Authenticate(user databaseModel.User) error {
+func getTable(authenticationMode int) (string, error) {
+	var table string
+	switch authenticationMode {
+	case AuthenticateAccess:
+		table = accessUserTable
+	case AuthenticateStaff:
+		table = staffUserTable
+	default:
+		return "", errors.New("Invalid authentication table provided")
+	}
+	return table, nil
+}
+
+func (m *DBManager) Authenticate(user databaseModel.User, authenticationMode int) error {
 	invalidError := errors.New("Invalid credentials provided")
 
 	dbUser := user
 
-	row := m.db.QueryRow("select * from "+userTable+" where username = ?", user.Username)
+	table, e := getTable(authenticationMode)
+
+	if e != nil {
+		return e
+	}
+
+	row := m.db.QueryRow("select * from "+table+" where username = ?", user.Username)
 	if err := row.Scan(&dbUser.Username, &dbUser.Password, &dbUser.Salt); err != nil {
 		return invalidError
 	}
@@ -159,7 +186,7 @@ func (m *DBManager) Authenticate(user databaseModel.User) error {
 	}
 }
 
-func (m *DBManager) Register(user databaseModel.User) error {
+func (m *DBManager) Register(user databaseModel.User, authenticationMode int) error {
 
 	// make sure that salt is empty
 	user.Salt = nil
@@ -169,7 +196,13 @@ func (m *DBManager) Register(user databaseModel.User) error {
 		return err
 	}
 
-	res, err := m.db.Exec("insert into "+userTable+" values(?,?,?)", user.Username, user.Password, user.Salt)
+	table, err := getTable(authenticationMode)
+
+	if err != nil {
+		return err
+	}
+
+	res, err := m.db.Exec("insert into "+table+" values(?,?,?)", user.Username, user.Password, user.Salt)
 
 	if err != nil {
 		return err

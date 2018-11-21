@@ -40,10 +40,12 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Schemes("https")
-	router.HandleFunc("/api/login", login).Methods("POST")
+	router.HandleFunc("/api/login-staff", login).Methods("POST")
+	router.HandleFunc("/api/login-access", login).Methods("POST")
 	router.HandleFunc("/api/content/searchAccess", searchAccess).Methods("POST")
 	router.HandleFunc("/api/content/searchStaff", searchStaff).Methods("POST")
-	router.HandleFunc("/api/register", register)
+	router.HandleFunc("/api/register-access", register)
+	router.HandleFunc("/api/register-staff", register)
 	router.HandleFunc("/api/logout", logout).Methods("GET")
 	fs := FileSystem{fs: http.Dir(path.Join(path.Dir(filename), "./public")), readDirBatchSize: 2}
 	router.PathPrefix("/").Handler(noCacheMiddleware(http.FileServer(fs)))
@@ -146,7 +148,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.Authenticate(body.ToDBModel()); err != nil {
+	mode := getMode(r.URL.EscapedPath())
+
+	if err := db.Authenticate(body.ToDBModel(), mode); err != nil {
 		log.Println(err)
 		http.Error(w, "Invalid Credentials", http.StatusForbidden)
 		return
@@ -158,6 +162,17 @@ func login(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 	log.Println("Logged in")
 
+}
+
+func getMode(url string) int {
+	var mode = -1
+
+	if strings.Contains(url, "access") {
+		mode = AuthenticateAccess
+	} else if strings.Contains(url, "staff") {
+		mode = AuthenticateStaff
+	}
+	return mode
 }
 
 func deleteSession(w http.ResponseWriter, r *http.Request) error {
@@ -203,8 +218,9 @@ func register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, res, http.StatusBadRequest)
 		return
 	}
+	mode := getMode(r.URL.EscapedPath())
 
-	if err := db.Register(body.ToDBModel()); err != nil {
+	if err := db.Register(body.ToDBModel(), mode); err != nil {
 		log.Println(err)
 		http.Error(w, "Unable to register", http.StatusInternalServerError)
 		return
